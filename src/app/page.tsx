@@ -68,45 +68,65 @@ export default function Home() {
 
       {/* GTA-style title: big, bold, simple */}
       {state.level === "overview" && (
-        <div className="fixed top-8 left-10 z-20 pointer-events-none">
-          <h1 style={{
-            fontFamily: '"Bebas Neue", sans-serif',
-            fontSize: "clamp(56px, 8vw, 100px)",
-            color: "#fff",
-            lineHeight: 0.85,
-            letterSpacing: "0.02em",
-            margin: 0,
-          }}>
-            <span>401</span>
-            <span style={{ color: "#22d3ee" }}>.GIVES</span>
-          </h1>
-          <p style={{
-            fontFamily: '"Sohne Mono", monospace',
-            fontSize: 11,
-            letterSpacing: "0.2em",
-            color: "rgba(255,255,255,0.35)",
-            textTransform: "uppercase",
-            marginTop: 6,
-          }}>
-            RHODE ISLAND
-          </p>
-        </div>
-      )}
+        <>
+          {/* Title: top left */}
+          <div className="fixed top-8 left-10 z-20 pointer-events-none">
+            <h1 style={{
+              fontFamily: '"Bebas Neue", sans-serif',
+              fontSize: "clamp(48px, 7vw, 88px)",
+              color: "#fff",
+              lineHeight: 0.85,
+              letterSpacing: "0.02em",
+              margin: 0,
+            }}>
+              <span>401</span>
+              <span style={{ color: "#22d3ee" }}>.GIVES</span>
+            </h1>
+            <p style={{
+              fontFamily: '"Sohne", sans-serif',
+              fontSize: "clamp(14px, 1.8vw, 20px)",
+              fontWeight: 300,
+              letterSpacing: "0.02em",
+              color: "rgba(255,255,255,0.6)",
+              marginTop: 8,
+            }}>
+              Discover where to give.
+            </p>
+            <p style={{
+              fontFamily: '"Sohne Mono", monospace',
+              fontSize: 10,
+              letterSpacing: "0.15em",
+              color: "rgba(255,255,255,0.25)",
+              textTransform: "uppercase",
+              marginTop: 6,
+            }}>
+              631 NONPROFITS ACROSS RHODE ISLAND
+            </p>
+          </div>
 
-      {/* Bottom prompt */}
-      {state.level === "overview" && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-          <p style={{
-            fontFamily: '"Sohne Mono", monospace',
-            fontSize: 11,
-            letterSpacing: "0.2em",
-            color: "rgba(255,255,255,0.3)",
-            textTransform: "uppercase",
-            animation: "pulse-text 3s ease-in-out infinite",
-          }}>
-            SELECT A COUNTY
-          </p>
-        </div>
+          {/* CTA: bottom center */}
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-center">
+            <p style={{
+              fontFamily: '"Bebas Neue", sans-serif',
+              fontSize: "clamp(16px, 2vw, 22px)",
+              letterSpacing: "0.1em",
+              color: "#22d3ee",
+              animation: "pulse-text 3s ease-in-out infinite",
+            }}>
+              SELECT A COUNTY TO EXPLORE
+            </p>
+            <p style={{
+              fontFamily: '"Sohne Mono", monospace',
+              fontSize: 9,
+              letterSpacing: "0.15em",
+              color: "rgba(245, 158, 11, 0.5)",
+              textTransform: "uppercase",
+              marginTop: 6,
+            }}>
+              401GIVES DAY / MARCH 31
+            </p>
+          </div>
+        </>
       )}
 
       {/* Side panel */}
