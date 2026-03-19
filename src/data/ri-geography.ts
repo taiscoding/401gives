@@ -6,12 +6,85 @@ export const RI_CENTER = {
 } as const;
 
 export const RI_BOUNDS = {
-  sw: { lat: 41.095, lng: -71.907 }, // southwest corner
-  ne: { lat: 42.019, lng: -71.088 }, // northeast corner
+  sw: { lat: 41.095, lng: -71.907 },
+  ne: { lat: 42.019, lng: -71.088 },
 } as const;
 
+// Real Rhode Island state boundary (MultiPolygon: mainland + Aquidneck/islands)
+// Source: US Census Bureau / PublicaMundi
+export const RI_STATE_BOUNDARY: GeoJSON.Feature = {
+  type: "Feature",
+  properties: { name: "Rhode Island" },
+  geometry: {
+    type: "MultiPolygon",
+    coordinates: [
+      // Aquidneck Island / Newport area
+      [[
+        [-71.196845, 41.67757],
+        [-71.120168, 41.496831],
+        [-71.317338, 41.474923],
+        [-71.196845, 41.67757],
+      ]],
+      // Mainland
+      [[
+        [-71.530939, 42.01714],
+        [-71.383061, 42.01714],
+        [-71.328292, 41.781632],
+        [-71.22423, 41.710431],
+        [-71.344723, 41.726862],
+        [-71.448785, 41.578985],
+        [-71.481646, 41.370861],
+        [-71.859555, 41.321569],
+        [-71.799309, 41.414677],
+        [-71.799309, 42.006186],
+        [-71.530939, 42.01714],
+      ]],
+    ],
+  },
+};
+
+// Void mask: covers the entire world EXCEPT Rhode Island
+// This creates the "floating island" effect on void black
+export const VOID_MASK: GeoJSON.Feature = {
+  type: "Feature",
+  properties: {},
+  geometry: {
+    type: "Polygon",
+    coordinates: [
+      // Outer ring: entire world
+      [
+        [-180, 90],
+        [180, 90],
+        [180, -90],
+        [-180, -90],
+        [-180, 90],
+      ],
+      // First hole: RI mainland (reversed winding for hole)
+      [
+        [-71.530939, 42.01714],
+        [-71.799309, 42.006186],
+        [-71.799309, 41.414677],
+        [-71.859555, 41.321569],
+        [-71.481646, 41.370861],
+        [-71.448785, 41.578985],
+        [-71.344723, 41.726862],
+        [-71.22423, 41.710431],
+        [-71.328292, 41.781632],
+        [-71.383061, 42.01714],
+        [-71.530939, 42.01714],
+      ],
+      // Second hole: Aquidneck Island (reversed winding)
+      [
+        [-71.196845, 41.67757],
+        [-71.317338, 41.474923],
+        [-71.120168, 41.496831],
+        [-71.196845, 41.67757],
+      ],
+    ],
+  },
+};
+
 // Simplified county boundary GeoJSON
-// Source: US Census TIGER/Line simplified boundaries
 export const COUNTY_BOUNDARIES: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
   features: [
@@ -97,13 +170,4 @@ export const COUNTY_BOUNDARIES: GeoJSON.FeatureCollection = {
       },
     },
   ],
-};
-
-// County colors (subtle variations of signal cyan)
-export const COUNTY_COLORS: Record<string, string> = {
-  "Providence": "rgba(34, 211, 238, 0.06)",
-  "Kent": "rgba(34, 211, 238, 0.05)",
-  "Washington": "rgba(34, 211, 238, 0.04)",
-  "Newport": "rgba(34, 211, 238, 0.07)",
-  "Bristol": "rgba(34, 211, 238, 0.05)",
 };
