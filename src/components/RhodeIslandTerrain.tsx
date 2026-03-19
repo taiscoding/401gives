@@ -237,7 +237,9 @@ interface RhodeIslandTerrainProps {
   cities?: CityData[];
   nonprofits?: NonprofitData[];
   explorationLevel?: ExplorationLevel;
+  activeCounty?: string;
   activeCause?: string;
+  onCountyClick?: (county: string) => void;
   onCityClick?: (city: string, county: string) => void;
   onNonprofitClick?: (slug: string) => void;
 }
@@ -246,10 +248,16 @@ export default function RhodeIslandTerrain({
   cities = [],
   nonprofits = [],
   explorationLevel = "overview",
+  activeCounty = "",
   activeCause = "",
+  onCountyClick,
   onCityClick,
   onNonprofitClick,
 }: RhodeIslandTerrainProps) {
+  // Filter cities to only the active county when drilled in
+  const visibleCities = activeCounty
+    ? cities.filter((c) => c.county === activeCounty)
+    : cities;
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000" }}>
       <Canvas
@@ -291,8 +299,9 @@ export default function RhodeIslandTerrain({
         {/* County nodes at overview, city dots after county selected */}
         {(explorationLevel === "overview" || explorationLevel === "city") && cities.length > 0 && onCityClick && (
           <CityNodes
-            cities={cities}
+            cities={explorationLevel === "city" ? visibleCities : cities}
             onCityClick={onCityClick}
+            onCountyClick={onCountyClick}
             mode={explorationLevel === "overview" ? "counties" : "cities"}
           />
         )}

@@ -74,6 +74,18 @@ export function useExploration() {
     fetchCities();
   }, []);
 
+  // Select a county: show cities within that county (no API call needed, just filter locally)
+  const selectCounty = useCallback(
+    (county: string) => {
+      // Use a placeholder city name — the "city" level here means "browsing cities within county"
+      setState({ level: "city", city: "", county });
+      setCauses([]);
+      setNonprofits([]);
+      setSelectedNonprofit(null);
+    },
+    []
+  );
+
   // Select a city: fetch causes for that city
   const selectCity = useCallback(
     async (city: string, county: string) => {
@@ -178,6 +190,7 @@ export function useExploration() {
     nonprofits,
     selectedNonprofit,
     loading,
+    selectCounty,
     selectCity,
     selectCause,
     selectNonprofit,

@@ -19,13 +19,16 @@ export default function Home() {
     nonprofits,
     selectedNonprofit,
     loading,
+    selectCounty,
     selectCity,
     selectCause,
     selectNonprofit,
     goBack,
   } = useExploration();
 
-  // Derive active cause for pin coloring
+  // Derive active county and cause
+  const activeCounty =
+    state.level !== "overview" ? state.county : "";
   const activeCause =
     state.level === "cause" || state.level === "nonprofit"
       ? state.cause
@@ -39,7 +42,9 @@ export default function Home() {
         cities={cities}
         nonprofits={nonprofits}
         explorationLevel={state.level}
+        activeCounty={activeCounty}
         activeCause={activeCause}
+        onCountyClick={selectCounty}
         onCityClick={selectCity}
         onNonprofitClick={selectNonprofit}
       />

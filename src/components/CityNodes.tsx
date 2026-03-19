@@ -190,10 +190,11 @@ function CityDot({ name, count, position, onClick }: CityDotProps) {
 interface CityNodesProps {
   cities: CityData[];
   onCityClick: (city: string, county: string) => void;
+  onCountyClick?: (county: string) => void;
   mode?: "counties" | "cities";
 }
 
-export default function CityNodes({ cities, onCityClick, mode = "counties" }: CityNodesProps) {
+export default function CityNodes({ cities, onCityClick, onCountyClick, mode = "counties" }: CityNodesProps) {
   // Group cities by county for overview mode
   const countyData = useMemo(() => {
     const map = new Map<string, { count: number; cities: CityData[] }>();
@@ -232,9 +233,9 @@ export default function CityNodes({ cities, onCityClick, mode = "counties" }: Ci
             count={county.count}
             position={county.position}
             onClick={() => {
-              // Click county = select the largest city in that county
-              const largest = county.cities.sort((a, b) => b.count - a.count)[0];
-              if (largest) onCityClick(largest.name, county.name);
+              if (onCountyClick) {
+                onCountyClick(county.name);
+              }
             }}
           />
         ))}
