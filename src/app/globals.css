@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Sohne";
+  src: url("../fonts/TestSohne-Leicht.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("../fonts/TestSohne-Buch.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("../fonts/TestSohne-Kraftig.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("../fonts/TestSohne-Extrafett.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("../fonts/TestSohneMono-Buch.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme inline {
+  --font-sohne: "Sohne", system-ui, sans-serif;
+  --font-sohne-mono: "Sohne Mono", ui-monospace, monospace;
+  --color-void: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-raised: #111111;
+  --color-surface-hover: #1a1a1a;
+  --color-ember: #f59e0b;
+  --color-ember-dim: #b45309;
+  --color-ember-glow: rgba(245, 158, 11, 0.4);
+  --color-signal: #22d3ee;
+  --color-signal-dim: #0891b2;
+  --color-signal-glow: rgba(34, 211, 238, 0.3);
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #888888;
+  --color-text-muted: #555555;
+}
+
+* {
+  cursor: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: var(--font-sohne);
+  width: 100vw;
+  height: 100vh;
+}
+
+::selection {
+  background: var(--color-ember);
+  color: #000;
+}
+
+/* Spatial cursor */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--color-signal);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  mix-blend-mode: difference;
+  transition: transform 0.15s ease-out, width 0.2s, height 0.2s;
+  transform: translate(-50%, -50%);
+}
+
+.cursor-dot.hovering {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1.5px solid var(--color-signal);
+  mix-blend-mode: normal;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease-out, height 0.3s ease-out, border-color 0.3s;
+}
+
+.cursor-ring.hovering {
+  width: 60px;
+  height: 60px;
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
+/* Map container */
+.map-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+.mapboxgl-canvas {
+  cursor: none !important;
+}
+
+.mapboxgl-ctrl-attrib,
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}
+
+/* Nonprofit marker pulse */
+@keyframes marker-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+.nonprofit-marker {
+  position: relative;
+  width: 12px;
+  height: 12px;
+}
+
+.nonprofit-marker-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: var(--color-signal);
+  border-radius: 50%;
+  box-shadow:
+    0 0 6px var(--color-signal),
+    0 0 20px var(--color-signal-glow);
+  transition: all 0.2s ease;
+}
+
+.nonprofit-marker-dot.active {
+  background: var(--color-ember);
+  box-shadow:
+    0 0 8px var(--color-ember),
+    0 0 24px var(--color-ember-glow);
+  width: 10px;
+  height: 10px;
+}
+
+.nonprofit-marker-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--color-signal);
+  animation: marker-pulse 2s ease-out infinite;
+}
+
+.nonprofit-marker-pulse.active {
+  border-color: var(--color-ember);
+}
+
+/* HUD elements */
+.hud-panel {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 211, 238, 0.1);
+  font-family: var(--font-sohne-mono);
+}
+
+/* Slide animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fade-in 1.5s ease forwards;
+}
+
+/* Scanline overlay */
+.scanlines::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9000;
+}
+
+/* Frequency line */
+@keyframes freq-drift {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.freq-line {
+  animation: freq-drift 3s ease-in-out infinite;
+}
