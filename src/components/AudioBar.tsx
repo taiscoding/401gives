@@ -243,7 +243,7 @@ export default function AudioBar() {
               color: "rgba(34, 211, 238, 0.6)",
             }}
           >
-            24HR SOUND
+            <a href="https://24hrsound.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>24HR SOUND</a>
           </span>
         </div>
       </div>
