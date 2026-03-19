@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import SpatialCursor from "@/components/SpatialCursor";
 import { useExploration } from "@/hooks/useExploration";
@@ -12,6 +13,36 @@ const RhodeIslandTerrain = dynamic(
 );
 
 export default function Home() {
+  // Sky gradient background (real solar data, same as 24hrfreemusic)
+  const [bgGradient, setBgGradient] = useState(
+    "radial-gradient(ellipse at 50% 50%, #0a0e1a 0%, #050810 60%, #010204 100%)"
+  );
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    (async () => {
+      const { fetchSolarData, getSkyPhase, phaseToGradient } = await import("@/lib/sky-gradient");
+      let lat = 41.58, lng = -71.48; // default Providence, RI
+      try {
+        const pos = await new Promise<GeolocationPosition>((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 })
+        );
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch {}
+      const solar = await fetchSolarData(lat, lng);
+      function update() {
+        const now = new Date();
+        const mins = now.getHours() * 60 + now.getMinutes();
+        if (solar) {
+          setBgGradient(phaseToGradient(getSkyPhase(solar, mins)));
+        }
+      }
+      update();
+      interval = setInterval(update, 60000);
+    })();
+    return () => clearInterval(interval);
+  }, []);
   const {
     state,
     cities,
@@ -37,7 +68,10 @@ export default function Home() {
     : [];
 
   return (
-    <main className="fixed inset-0 bg-void">
+    <main
+      className="fixed inset-0 transition-all duration-[3000ms]"
+      style={{ background: bgGradient }}
+    >
       <SpatialCursor />
 
       <RhodeIslandTerrain

@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useEffect, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import CityNodes from "./CityNodes";
@@ -136,12 +136,33 @@ function TerrainMesh() {
 
       if (isInsideRI(x, z)) {
         const h = elevation(x, z);
-        // Slight base lift so terrain floats above y=0
         pos.setY(i, h * 6 + 1.5);
         const [r, g, b] = color(h);
-        cols[i * 3] = r;
-        cols[i * 3 + 1] = g;
-        cols[i * 3 + 2] = b;
+
+        // Edge fade: darken vertices near the boundary
+        let minDist = Infinity;
+        for (const poly of [MAINLAND, AQUIDNECK, CONANICUT]) {
+          for (let j = 0; j < poly.length; j++) {
+            const [ax, az] = poly[j];
+            const [bx, bz] = poly[(j + 1) % poly.length];
+            // Point-to-segment distance
+            const dx = bx - ax, dz = bz - az;
+            const len2 = dx * dx + dz * dz;
+            let t = len2 > 0 ? ((x - ax) * dx + (z - az) * dz) / len2 : 0;
+            t = Math.max(0, Math.min(1, t));
+            const px = ax + t * dx, pz = az + t * dz;
+            const dist = Math.sqrt((x - px) ** 2 + (z - pz) ** 2);
+            if (dist < minDist) minDist = dist;
+          }
+        }
+        // Fade factor: 1.0 at center, 0.0 at boundary
+        const fadeRadius = 4; // units from edge to start fading
+        const fade = Math.min(1, minDist / fadeRadius);
+        const fadePow = fade * fade; // quadratic for smoother falloff
+
+        cols[i * 3] = r * fadePow;
+        cols[i * 3 + 1] = g * fadePow;
+        cols[i * 3 + 2] = b * fadePow;
       } else {
         // Collapse outside vertices to a single point far below view
         // This makes outside triangles degenerate (zero area) so they're invisible
@@ -166,73 +187,7 @@ function TerrainMesh() {
   );
 }
 
-// Animated breathing background gradient (like 24hrfreemusic)
-function AnimatedBackground() {
-  const meshRef = useRef<THREE.Mesh>(null!);
-  const matRef = useRef<THREE.ShaderMaterial>(null!);
-
-  const shader = useMemo(() => ({
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform float uTime;
-      varying vec2 vUv;
-
-      void main() {
-        // Slow breathing color shifts
-        float t = uTime * 0.08;
-
-        // Deep dark base with subtle color movement
-        vec3 col1 = vec3(0.01, 0.02, 0.04); // near black blue
-        vec3 col2 = vec3(0.02, 0.01, 0.03); // near black purple
-        vec3 col3 = vec3(0.01, 0.03, 0.03); // near black teal
-
-        // Blend between colors based on time
-        float blend1 = sin(t) * 0.5 + 0.5;
-        float blend2 = sin(t * 0.7 + 1.5) * 0.5 + 0.5;
-
-        vec3 base = mix(mix(col1, col2, blend1), col3, blend2);
-
-        // Radial gradient: lighter in center where RI sits
-        float dist = length(vUv - vec2(0.5, 0.45));
-        float vignette = 1.0 - smoothstep(0.0, 0.7, dist);
-
-        // Subtle glow around center
-        vec3 glow = vec3(0.01, 0.04, 0.05) * vignette * 0.5;
-
-        gl_FragColor = vec4(base + glow, 1.0);
-      }
-    `,
-    uniforms: {
-      uTime: { value: 0 },
-    },
-  }), []);
-
-  useFrame((state) => {
-    if (matRef.current) {
-      matRef.current.uniforms.uTime.value = state.clock.elapsedTime;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} renderOrder={-1}>
-      <planeGeometry args={[2, 2]} />
-      <shaderMaterial
-        ref={matRef}
-        vertexShader={shader.vertexShader}
-        fragmentShader={shader.fragmentShader}
-        uniforms={shader.uniforms}
-        depthWrite={false}
-        depthTest={false}
-      />
-    </mesh>
-  );
-}
+// Background is now CSS (sky gradient), Canvas is transparent
 
 // ─── Props ──────────────────────────────────────────────────────
 
@@ -262,7 +217,7 @@ export default function RhodeIslandTerrain({
     ? cities.filter((c) => c.county === activeCounty)
     : cities;
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#000" }}>
+    <div style={{ position: "fixed", inset: 0 }}>
       <Canvas
         camera={{
           position: [0, 130, 65],
@@ -270,10 +225,9 @@ export default function RhodeIslandTerrain({
           near: 0.1,
           far: 800,
         }}
-        gl={{ antialias: true }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: "transparent" }}
       >
-        {/* Animated breathing background */}
-        <AnimatedBackground />
 
         {/* Lighting */}
         <ambientLight intensity={0.4} />
