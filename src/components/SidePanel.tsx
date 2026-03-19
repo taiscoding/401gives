@@ -1,7 +1,14 @@
 "use client";
 
+import type { SyntheticEvent } from "react";
 import { getCauseColor } from "@/data/cause-categories";
 import type { CityData, CauseData, NonprofitData } from "@/hooks/useExploration";
+
+function handleImgError(e: SyntheticEvent<HTMLImageElement>) {
+  e.currentTarget.style.display = "none";
+  const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+  if (fallback) fallback.style.display = "flex";
+}
 
 interface SidePanelProps {
   level: "city" | "cause" | "nonprofit";
@@ -241,9 +248,10 @@ export default function SidePanel({
                 display: "flex", alignItems: "center", justifyContent: "center",
                 overflow: "hidden",
               }}>
-                {np.logoUrl ? (
-                  <img src={np.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
+                {np.logoUrl && (
+                  <img src={np.logoUrl} alt="" onError={handleImgError} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                )}
+                {(
                   <span style={{
                     fontFamily: '"Sohne", sans-serif',
                     fontWeight: 800,

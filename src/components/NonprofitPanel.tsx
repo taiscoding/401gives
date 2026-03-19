@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type SyntheticEvent } from "react";
 import { getCauseColor } from "@/data/cause-categories";
+
+// Hide broken images by swapping to fallback
+function handleImgError(e: SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  img.style.display = "none";
+  // Show the next sibling (fallback avatar) if it exists
+  const fallback = img.nextElementSibling as HTMLElement | null;
+  if (fallback) fallback.style.display = "flex";
+}
 import type { NonprofitData } from "@/hooks/useExploration";
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -166,40 +175,43 @@ export default function NonprofitPanel({
             gap: 16,
           }}
         >
-          {/* Logo / Avatar */}
-          {nonprofit.logoUrl ? (
-            <img
-              src={nonprofit.logoUrl}
-              alt={nonprofit.name}
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 10,
-                objectFit: "cover",
-                border: `1px solid ${primaryColor}30`,
-                flexShrink: 0,
-              }}
-            />
-          ) : (
+          {/* Logo / Avatar (with broken image fallback) */}
+          <div style={{ width: 64, height: 64, flexShrink: 0, position: "relative" }}>
+            {nonprofit.logoUrl && (
+              <img
+                src={nonprofit.logoUrl}
+                alt={nonprofit.name}
+                onError={handleImgError}
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 10,
+                  objectFit: "cover",
+                  border: `1px solid ${primaryColor}30`,
+                }}
+              />
+            )}
             <div
               style={{
                 width: 64,
                 height: 64,
                 borderRadius: 10,
                 background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}88)`,
-                display: "flex",
+                display: nonprofit.logoUrl ? "none" : "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontFamily: '"Sohne", sans-serif',
                 fontWeight: 800,
                 fontSize: "22px",
                 color: "#000",
-                flexShrink: 0,
+                position: nonprofit.logoUrl ? "absolute" : "relative",
+                top: 0,
+                left: 0,
               }}
             >
               {initials}
             </div>
-          )}
+          </div>
 
           <div style={{ minWidth: 0, flex: 1 }}>
             <h2
@@ -728,17 +740,19 @@ export default function NonprofitPanel({
                           overflow: "hidden",
                         }}
                       >
-                        {r.logoUrl ? (
+                        {r.logoUrl && (
                           <img
                             src={r.logoUrl}
                             alt=""
+                            onError={handleImgError}
                             style={{
                               width: "100%",
                               height: "100%",
                               objectFit: "cover",
                             }}
                           />
-                        ) : (
+                        )}
+                        {(
                           <span
                             style={{
                               fontFamily: '"Sohne", sans-serif',
