@@ -143,8 +143,11 @@ function TerrainMesh() {
         cols[i * 3 + 1] = g;
         cols[i * 3 + 2] = b;
       } else {
-        // Flush with y=0, black, invisible on black bg
-        pos.setY(i, 0);
+        // Collapse outside vertices to a single point far below view
+        // This makes outside triangles degenerate (zero area) so they're invisible
+        pos.setX(i, 0);
+        pos.setY(i, -100);
+        pos.setZ(i, 0);
         cols[i * 3] = 0;
         cols[i * 3 + 1] = 0;
         cols[i * 3 + 2] = 0;
