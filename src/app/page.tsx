@@ -6,6 +6,7 @@ import SpatialCursor from "@/components/SpatialCursor";
 import { useExploration } from "@/hooks/useExploration";
 import SidePanel from "@/components/SidePanel";
 import NonprofitPanel from "@/components/NonprofitPanel";
+import AudioBar from "@/components/AudioBar";
 
 const RhodeIslandTerrain = dynamic(
   () => import("@/components/RhodeIslandTerrain"),
@@ -66,11 +67,14 @@ export default function Home() {
         onNonprofitClick={selectNonprofit}
       />
 
+      {/* 360 SOUND audio bar */}
+      <AudioBar />
+
       {/* GTA-style title: big, bold, simple */}
       {state.level === "overview" && (
         <>
           {/* Title: top left */}
-          <div className="fixed top-8 left-10 z-20 pointer-events-none">
+          <div className="fixed top-14 left-10 z-20 pointer-events-none">
             <h1 style={{
               fontFamily: '"Bebas Neue", sans-serif',
               fontSize: "clamp(48px, 7vw, 88px)",
