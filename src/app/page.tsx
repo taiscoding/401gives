@@ -85,73 +85,110 @@ export default function Home() {
         onNonprofitClick={selectNonprofit}
       />
 
-      {/* Welcome overlay: tells you what this is and what to do */}
+      {/* Welcome overlay: game loading screen */}
       {state.level === "overview" && (
         <div
-          className="fixed inset-0 z-20 pointer-events-none flex flex-col items-center"
-          style={{ paddingTop: "8vh" }}
+          className="fixed inset-0 z-20 pointer-events-none flex flex-col items-center justify-between"
+          style={{ padding: "6vh 0 14vh" }}
         >
-          {/* Title */}
-          <h1
-            style={{
-              fontFamily: '"Sohne", sans-serif',
-              fontWeight: 800,
-              fontSize: "clamp(28px, 4vw, 48px)",
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-              color: "#ffffff",
-              margin: 0,
-              textAlign: "center",
-            }}
-          >
-            401.GIVES
-          </h1>
+          {/* Top: title block */}
+          <div style={{ textAlign: "center" }}>
+            <h1
+              style={{
+                fontFamily: '"Bebas Neue", sans-serif',
+                fontSize: "clamp(48px, 7vw, 90px)",
+                letterSpacing: "0.06em",
+                color: "#ffffff",
+                margin: 0,
+                lineHeight: 0.9,
+                textShadow: "0 0 40px rgba(34, 211, 238, 0.15)",
+              }}
+            >
+              401.GIVES
+            </h1>
+            <p
+              style={{
+                fontFamily: '"Sohne Mono", monospace',
+                fontSize: "clamp(10px, 1.1vw, 13px)",
+                textTransform: "uppercase",
+                letterSpacing: "0.25em",
+                color: "rgba(34, 211, 238, 0.7)",
+                margin: "10px 0 0",
+              }}
+            >
+              RHODE ISLAND
+            </p>
+          </div>
 
-          {/* Tagline */}
-          <p
-            style={{
-              fontFamily: '"Sohne Mono", monospace',
-              fontSize: "clamp(10px, 1.2vw, 14px)",
-              textTransform: "uppercase",
-              letterSpacing: "0.2em",
-              color: "rgba(34, 211, 238, 0.8)",
-              margin: "8px 0 0",
-              textAlign: "center",
-            }}
-          >
-            EXPLORE RHODE ISLAND'S 631 NONPROFITS
-          </p>
+          {/* Center spacer (map lives here) */}
+          <div />
 
-          {/* Instruction */}
-          <p
-            style={{
-              fontFamily: '"Sohne Mono", monospace',
-              fontSize: "clamp(9px, 1vw, 11px)",
-              textTransform: "uppercase",
-              letterSpacing: "0.15em",
-              color: "rgba(255, 255, 255, 0.35)",
-              margin: "12px 0 0",
-              textAlign: "center",
-            }}
-          >
-            CLICK A COUNTY TO BEGIN
-          </p>
-
-          {/* March 31 badge */}
+          {/* Bottom: intro card */}
           <div
+            className="pointer-events-auto"
             style={{
-              marginTop: "16px",
-              padding: "6px 16px",
-              borderRadius: 20,
-              border: "1px solid rgba(245, 158, 11, 0.3)",
-              fontFamily: '"Sohne Mono", monospace',
-              fontSize: "9px",
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-              color: "#f59e0b",
+              background: "rgba(0, 0, 0, 0.7)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(34, 211, 238, 0.12)",
+              borderRadius: 16,
+              padding: "24px 32px",
+              maxWidth: 420,
+              textAlign: "center",
             }}
           >
-            401GIVES DAY: MARCH 31
+            <p
+              style={{
+                fontFamily: '"Sohne", sans-serif',
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "rgba(255, 255, 255, 0.75)",
+                lineHeight: 1.6,
+                margin: 0,
+                letterSpacing: "0.01em",
+              }}
+            >
+              Discover 631 nonprofits across Rhode Island.
+              Explore by county, cause, and community.
+              Find organizations that matter to you and give on March 31.
+            </p>
+
+            <div style={{
+              marginTop: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 16,
+            }}>
+              <p
+                style={{
+                  fontFamily: '"Sohne Mono", monospace',
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
+                  color: "rgba(34, 211, 238, 0.6)",
+                  margin: 0,
+                }}
+              >
+                SELECT A COUNTY TO BEGIN
+              </p>
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                display: "inline-block",
+                padding: "5px 16px",
+                borderRadius: 20,
+                border: "1px solid rgba(245, 158, 11, 0.25)",
+                fontFamily: '"Sohne Mono", monospace',
+                fontSize: "9px",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                color: "rgba(245, 158, 11, 0.6)",
+              }}
+            >
+              401GIVES DAY / MARCH 31
+            </div>
           </div>
         </div>
       )}
