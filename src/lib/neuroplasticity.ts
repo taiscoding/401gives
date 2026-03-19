@@ -181,7 +181,7 @@ export async function detectBridges(sql: ReturnType<typeof neon>): Promise<Array
     SELECT entity_name, genres, location_country
     FROM entity_cache
     WHERE entity_type = 'nonprofit'
-      AND jsonb_array_length(genres) >= 2
+      AND array_length(genres, 1) >= 2
       AND confidence > 0.3
     LIMIT 50
   `;

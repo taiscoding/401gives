@@ -8,6 +8,7 @@
  * Usage: npx tsx scripts/run-intelligence.ts
  */
 
+import "dotenv/config";
 import { neon } from "@neondatabase/serverless";
 import { runNeuroplasticity } from "../src/lib/neuroplasticity";
 import { getMetaLearningSummary } from "../src/lib/meta-learning";
