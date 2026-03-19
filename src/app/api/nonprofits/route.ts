@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { nonprofits, causes, nonprofitCauses } from "@/lib/schema";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, ne } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -57,10 +57,58 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Fetch related nonprofits for each nonprofit in this result set.
+      // Related = same city, shares at least one cause, different nonprofit. Limit 4 per nonprofit.
+      let relatedMap: Record<
+        string,
+        { name: string; slug: string; city: string; logoUrl: string | null }[]
+      > = {};
+
+      if (nonprofitIds.length > 0) {
+        for (const np of rows) {
+          const npCauses = nonprofitCausesMap[np.id] || [];
+          if (npCauses.length === 0) continue;
+
+          const relatedRows = await db
+            .selectDistinctOn([nonprofits.id], {
+              id: nonprofits.id,
+              name: nonprofits.name,
+              slug: nonprofits.slug,
+              city: nonprofits.city,
+              logoUrl: nonprofits.logoUrl,
+            })
+            .from(nonprofits)
+            .innerJoin(
+              nonprofitCauses,
+              eq(nonprofitCauses.nonprofitId, nonprofits.id)
+            )
+            .innerJoin(causes, eq(causes.id, nonprofitCauses.causeId))
+            .where(
+              and(
+                eq(nonprofits.city, np.city),
+                ne(nonprofits.id, np.id),
+                sql`${causes.name} IN (${sql.join(
+                  npCauses.map((c) => sql`${c}`),
+                  sql`, `
+                )})`
+              )
+            )
+            .limit(4);
+
+          relatedMap[np.id] = relatedRows.map((r) => ({
+            name: r.name,
+            slug: r.slug,
+            city: r.city,
+            logoUrl: r.logoUrl,
+          }));
+        }
+      }
+
       return NextResponse.json({
         nonprofits: rows.map((r) => ({
           ...r,
           causes: nonprofitCausesMap[r.id] || [],
+          related: relatedMap[r.id] || [],
         })),
       });
     }

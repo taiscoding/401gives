@@ -32,6 +32,13 @@ export interface CauseData {
   count: number;
 }
 
+export interface RelatedNonprofit {
+  name: string;
+  slug: string;
+  city: string;
+  logoUrl: string | null;
+}
+
 export interface NonprofitData {
   id: string;
   name: string;
@@ -44,6 +51,7 @@ export interface NonprofitData {
   mission: string | null;
   donateUrl: string | null;
   causes: string[];
+  related?: RelatedNonprofit[];
 }
 
 // ─── Hook ───────────────────────────────────────────────────────

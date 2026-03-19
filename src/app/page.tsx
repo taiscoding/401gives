@@ -105,7 +105,12 @@ export default function Home() {
 
       {/* Nonprofit detail panel (right) */}
       {state.level === "nonprofit" && selectedNonprofit && (
-        <NonprofitPanel nonprofit={selectedNonprofit} onBack={goBack} />
+        <NonprofitPanel
+          nonprofit={selectedNonprofit}
+          related={selectedNonprofit.related}
+          onBack={goBack}
+          onRelatedClick={selectNonprofit}
+        />
       )}
 
       {/* Bottom fade: terrain gracefully dissolves into sky */}
