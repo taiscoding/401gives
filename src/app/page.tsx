@@ -67,7 +67,7 @@ export default function Home() {
         onNonprofitClick={selectNonprofit}
       />
 
-      {/* 360 SOUND audio bar */}
+      {/* 24HR SOUND audio bar */}
       <AudioBar />
 
       {/* GTA-style title: big, bold, simple */}

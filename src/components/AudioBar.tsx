@@ -215,7 +215,7 @@ export default function AudioBar() {
           </span>
         </div>
 
-        {/* 360 SOUND branding */}
+        {/* 24HR SOUND branding */}
         <div
           style={{
             display: "flex",
@@ -243,7 +243,7 @@ export default function AudioBar() {
               color: "rgba(34, 211, 238, 0.6)",
             }}
           >
-            360 SOUND
+            24HR SOUND
           </span>
         </div>
       </div>

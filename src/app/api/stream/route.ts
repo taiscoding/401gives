@@ -65,10 +65,10 @@ export async function GET() {
 
     return NextResponse.json({
       tracks: shuffled,
-      stationName: "360 SOUND",
+      stationName: "24HR SOUND",
       totalTracks: shuffled.length,
     });
   } catch {
-    return NextResponse.json({ tracks: FALLBACK_TRACKS, stationName: "360 SOUND" });
+    return NextResponse.json({ tracks: FALLBACK_TRACKS, stationName: "24HR SOUND" });
   }
 }
