@@ -53,13 +53,13 @@ const DEFAULT_SIGNAL_WEIGHTS: Record<string, number> = {
  */
 export async function getSignalWeights(sql: ReturnType<typeof neon>): Promise<Record<string, number>> {
   try {
-    const row = await sql`
+    const rows: any[] = await sql`
       SELECT metadata FROM entity_cache
       WHERE entity_name = '__meta_signal_weights' AND entity_type = 'system'
       LIMIT 1
     `;
-    if (row[0]?.metadata?.weights) {
-      return { ...DEFAULT_SIGNAL_WEIGHTS, ...row[0].metadata.weights };
+    if (rows[0]?.metadata?.weights) {
+      return { ...DEFAULT_SIGNAL_WEIGHTS, ...rows[0].metadata.weights };
     }
   } catch {}
   return { ...DEFAULT_SIGNAL_WEIGHTS };
