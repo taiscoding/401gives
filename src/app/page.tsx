@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import dynamic from "next/dynamic";
 import SpatialCursor from "@/components/SpatialCursor";
 
@@ -10,15 +9,10 @@ const RhodeIslandTerrain = dynamic(
 );
 
 export default function Home() {
-  const [activeCounty, setActiveCounty] = useState<string | null>(null);
-
   return (
     <main className="fixed inset-0 bg-void">
       <SpatialCursor />
-
-      <RhodeIslandTerrain
-        onCountyClick={(county) => setActiveCounty(county)}
-      />
+      <RhodeIslandTerrain />
 
       {/* Bottom HUD */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 hud-panel px-6 py-3">
