@@ -18,18 +18,45 @@ import {
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-// Completely blank style: void black canvas, no labels, no roads, nothing.
-// We render everything ourselves.
-const BLANK_STYLE: mapboxgl.StyleSpecification = {
+// Custom style: void black background + satellite imagery baked in.
+// No Mapbox labels, roads, or city names. We control everything.
+const VOID_SATELLITE_STYLE: mapboxgl.StyleSpecification = {
   version: 8,
-  name: "void",
-  sources: {},
+  name: "void-satellite",
+  sources: {
+    "mapbox-satellite": {
+      type: "raster",
+      url: "mapbox://mapbox.satellite",
+      tileSize: 256,
+    },
+    "mapbox-dem": {
+      type: "raster-dem",
+      url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+      tileSize: 512,
+      maxzoom: 14,
+    },
+  },
+  terrain: {
+    source: "mapbox-dem",
+    exaggeration: 2.5,
+  },
   layers: [
     {
       id: "background",
       type: "background",
       paint: {
         "background-color": "#000000",
+      },
+    },
+    {
+      id: "satellite",
+      type: "raster",
+      source: "mapbox-satellite",
+      paint: {
+        "raster-saturation": 0.5,
+        "raster-brightness-min": 0.08,
+        "raster-brightness-max": 0.9,
+        "raster-contrast": 0.35,
       },
     },
   ],
@@ -55,49 +82,18 @@ export default function MapView({
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    // Add satellite raster tiles (Mapbox satellite imagery)
-    map.addSource("satellite", {
-      type: "raster",
-      url: "mapbox://mapbox.satellite",
-      tileSize: 256,
-    });
-
-    // Add DEM for 3D terrain
-    map.addSource("mapbox-dem", {
-      type: "raster-dem",
-      url: "mapbox://mapbox.mapbox-terrain-dem-v1",
-      tileSize: 512,
-      maxzoom: 14,
-    });
-
-    // Add satellite raster layer FIRST (below everything)
-    map.addLayer(
-      {
-        id: "satellite-tiles",
-        type: "raster",
-        source: "satellite",
+    // Sky atmosphere for depth
+    if (!map.getLayer("sky")) {
+      map.addLayer({
+        id: "sky",
+        type: "sky",
         paint: {
-          "raster-saturation": -0.3, // slightly desaturated for the dark aesthetic
-          "raster-brightness-max": 0.7, // dim it down
-          "raster-contrast": 0.2, // more contrast
+          "sky-type": "atmosphere",
+          "sky-atmosphere-sun": [0.0, 80.0],
+          "sky-atmosphere-sun-intensity": 5,
         },
-      },
-      "background" // insert above background but below everything else
-    );
-
-    // Enable 3D terrain
-    map.setTerrain({ source: "mapbox-dem", exaggeration: 2.5 });
-
-    // Sky atmosphere
-    map.addLayer({
-      id: "sky",
-      type: "sky",
-      paint: {
-        "sky-type": "atmosphere",
-        "sky-atmosphere-sun": [0.0, 80.0],
-        "sky-atmosphere-sun-intensity": 5,
-      },
-    });
+      });
+    }
   }, [mapRef]);
 
   const onMouseMove = useCallback(
@@ -168,7 +164,7 @@ export default function MapView({
           bearing: -10,
         }}
         style={{ width: "100%", height: "100%" }}
-        mapStyle={BLANK_STYLE}
+        mapStyle={VOID_SATELLITE_STYLE}
         interactiveLayerIds={["county-fill"]}
         onLoad={onMapLoad}
         onMouseMove={onMouseMove}

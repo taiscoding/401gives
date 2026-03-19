@@ -13,23 +13,30 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "@phosphor-icons/react": "^2.1.10",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@types/three": "^0.183.1",
+    "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "mapbox-gl": "^3.9.0",
     "nanoid": "^5.1.7",
     "next": "16.1.7",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-map-gl": "^7.1.0"
+    "react-map-gl": "^7.1.0",
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cheerio": "^1.2.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
