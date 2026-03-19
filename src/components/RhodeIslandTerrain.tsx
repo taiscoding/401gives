@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useMemo, useRef, useEffect, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
-// Convert geo coords to local 3D space
+// Geo conversion
 const CENTER_LNG = -71.4774;
 const CENTER_LAT = 41.5801;
 const S = 150;
@@ -17,7 +17,7 @@ function geo(lng: number, lat: number): [number, number] {
   ];
 }
 
-// More detailed RI mainland boundary
+// Detailed RI mainland boundary
 const MAINLAND = [
   [-71.862, 41.321], [-71.833, 41.345], [-71.812, 41.370],
   [-71.800, 41.395], [-71.799, 41.415], [-71.799, 41.460],
@@ -46,7 +46,6 @@ const MAINLAND = [
   [-71.835, 41.320], [-71.860, 41.322], [-71.862, 41.321],
 ].map(([a, b]) => geo(a, b));
 
-// Aquidneck Island (more points)
 const AQUIDNECK = [
   [-71.285, 41.640], [-71.268, 41.630], [-71.250, 41.615],
   [-71.235, 41.595], [-71.222, 41.575], [-71.212, 41.555],
@@ -58,7 +57,6 @@ const AQUIDNECK = [
   [-71.290, 41.632], [-71.285, 41.640],
 ].map(([a, b]) => geo(a, b));
 
-// Conanicut Island (Jamestown)
 const CONANICUT = [
   [-71.380, 41.530], [-71.370, 41.515], [-71.362, 41.498],
   [-71.358, 41.480], [-71.360, 41.462], [-71.370, 41.455],
@@ -85,185 +83,148 @@ function isInsideRI(x: number, z: number): boolean {
 function elevation(x: number, z: number): number {
   const nx = (x + 43) / 72;
   const nz = (z + 39) / 105;
-
-  // More dramatic for game-world feel (exaggerated but plausible)
   let h = (1 - nx) * 0.4;
-
-  // NW highlands
   const nwDist = Math.sqrt((nx - 0.15) ** 2 + (nz - 0.8) ** 2);
   h += Math.max(0, 0.35 - nwDist * 1.0);
-
-  // Central gentle ridge
   h += Math.max(0, 0.12 - Math.abs(nx - 0.35) * 0.6);
-
-  // Narragansett Bay depression
   const bayWidth = 0.08 + (1 - nz) * 0.1;
   const bayDist = Math.abs(nx - 0.58);
   if (bayDist < bayWidth && nz < 0.7) {
     h -= (1 - bayDist / bayWidth) * 0.35 * (0.4 + (1 - nz) * 0.6);
   }
-
-  // Providence River
   if (Math.abs(nx - 0.52) < 0.03 && nz > 0.6 && nz < 0.85) {
     h -= 0.15 * (1 - Math.abs(nx - 0.52) / 0.03);
   }
-
-  // South coast taper
   if (nz < 0.12) h *= nz / 0.12;
-
-  // Gentle rolling noise
   h += Math.sin(x * 0.12) * Math.cos(z * 0.1) * 0.04;
   h += Math.sin(x * 0.06 + z * 0.05) * 0.025;
-
   return Math.max(-0.1, Math.min(0.7, h));
 }
 
-// Rich game-world color palette
 function color(h: number): [number, number, number] {
-  if (h < -0.03) return [0.03, 0.10, 0.18];  // deep water
-  if (h < 0.02) return [0.05, 0.16, 0.25];   // shallow
-  if (h < 0.08) return [0.08, 0.30, 0.16];   // wetland
-  if (h < 0.15) return [0.11, 0.38, 0.15];   // lowland
-  if (h < 0.22) return [0.14, 0.45, 0.17];   // meadow
-  if (h < 0.30) return [0.17, 0.52, 0.19];   // field
-  if (h < 0.38) return [0.20, 0.56, 0.21];   // forest
-  if (h < 0.46) return [0.25, 0.58, 0.23];   // dense forest
-  if (h < 0.54) return [0.32, 0.60, 0.25];   // upland
-  if (h < 0.62) return [0.42, 0.60, 0.27];   // high
-  return [0.55, 0.58, 0.30];                  // peak
+  if (h < -0.03) return [0.03, 0.10, 0.18];
+  if (h < 0.02) return [0.05, 0.16, 0.25];
+  if (h < 0.08) return [0.08, 0.30, 0.16];
+  if (h < 0.15) return [0.11, 0.38, 0.15];
+  if (h < 0.22) return [0.14, 0.45, 0.17];
+  if (h < 0.30) return [0.17, 0.52, 0.19];
+  if (h < 0.38) return [0.20, 0.56, 0.21];
+  if (h < 0.46) return [0.25, 0.58, 0.23];
+  if (h < 0.54) return [0.32, 0.60, 0.25];
+  if (h < 0.62) return [0.42, 0.60, 0.27];
+  return [0.55, 0.58, 0.30];
 }
 
-// The terrain surface
-function TerrainSurface() {
-  const ref = useRef<THREE.Group>(null!);
+// Terrain mesh (just the top surface, no side walls or water plane box)
+function TerrainMesh() {
+  const ref = useRef<THREE.Mesh>(null!);
 
-  const { topGeo, sideGeo, waterGeo } = useMemo(() => {
+  const geometry = useMemo(() => {
     const seg = 300;
-    const top = new THREE.PlaneGeometry(100, 140, seg, seg);
-    top.rotateX(-Math.PI / 2);
+    const geo = new THREE.PlaneGeometry(100, 140, seg, seg);
+    geo.rotateX(-Math.PI / 2);
 
-    const pos = top.attributes.position;
+    const pos = geo.attributes.position;
     const cols = new Float32Array(pos.count * 3);
-    const BASE_HEIGHT = 3; // thickness of the island "slab"
 
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const z = pos.getZ(i);
-      const inside = isInsideRI(x, z);
 
-      if (inside) {
+      if (isInsideRI(x, z)) {
         const h = elevation(x, z);
-        pos.setY(i, h * 10 + BASE_HEIGHT);
+        // Slight base lift so terrain floats above y=0
+        pos.setY(i, h * 6 + 1.5);
         const [r, g, b] = color(h);
         cols[i * 3] = r;
         cols[i * 3 + 1] = g;
         cols[i * 3 + 2] = b;
       } else {
-        pos.setY(i, -50); // far below, invisible
+        // Flush with y=0, black, invisible on black bg
+        pos.setY(i, 0);
         cols[i * 3] = 0;
         cols[i * 3 + 1] = 0;
         cols[i * 3 + 2] = 0;
       }
     }
 
-    top.setAttribute("color", new THREE.BufferAttribute(cols, 3));
-    top.computeVertexNormals();
-
-    // Create the extruded side walls using a Shape
-    const createSideWalls = (polygon: [number, number][]): THREE.BufferGeometry => {
-      const vertices: number[] = [];
-      const colors: number[] = [];
-
-      for (let i = 0; i < polygon.length; i++) {
-        const [x1, z1] = polygon[i];
-        const [x2, z2] = polygon[(i + 1) % polygon.length];
-        const h1 = elevation(x1, z1) * 10 + BASE_HEIGHT;
-        const h2 = elevation(x2, z2) * 10 + BASE_HEIGHT;
-        const bottom = -1;
-
-        // Two triangles per wall segment
-        vertices.push(x1, h1, z1, x2, h2, z2, x1, bottom, z1);
-        vertices.push(x2, h2, z2, x2, bottom, z2, x1, bottom, z1);
-
-        // Dark side color (subtle gradient)
-        const sideColor = [0.06, 0.08, 0.10];
-        const bottomColor = [0.02, 0.03, 0.04];
-        for (let t = 0; t < 2; t++) {
-          colors.push(...sideColor, ...sideColor, ...bottomColor);
-        }
-      }
-
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-      geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
-      geo.computeVertexNormals();
-      return geo;
-    };
-
-    // Combine side walls for all landmasses
-    const sides: THREE.BufferGeometry[] = [
-      createSideWalls(MAINLAND),
-      createSideWalls(AQUIDNECK),
-      createSideWalls(CONANICUT),
-    ];
-
-    // Water plane (sits at the bay level inside RI)
-    const water = new THREE.PlaneGeometry(100, 140, 1, 1);
-    water.rotateX(-Math.PI / 2);
-    water.translate(0, BASE_HEIGHT - 0.3, 0); // just below land surface
-
-    return {
-      topGeo: top,
-      sideGeo: sides,
-      waterGeo: water,
-    };
+    geo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
+    geo.computeVertexNormals();
+    return geo;
   }, []);
 
-  useFrame((s) => {
-    if (ref.current) {
-      ref.current.rotation.y = Math.sin(s.clock.elapsedTime * 0.06) * 0.015;
+  return (
+    <mesh ref={ref} geometry={geometry}>
+      <meshStandardMaterial vertexColors roughness={0.7} metalness={0.05} />
+    </mesh>
+  );
+}
+
+// Animated breathing background gradient (like 24hrfreemusic)
+function AnimatedBackground() {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const matRef = useRef<THREE.ShaderMaterial>(null!);
+
+  const shader = useMemo(() => ({
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      varying vec2 vUv;
+
+      void main() {
+        // Slow breathing color shifts
+        float t = uTime * 0.08;
+
+        // Deep dark base with subtle color movement
+        vec3 col1 = vec3(0.01, 0.02, 0.04); // near black blue
+        vec3 col2 = vec3(0.02, 0.01, 0.03); // near black purple
+        vec3 col3 = vec3(0.01, 0.03, 0.03); // near black teal
+
+        // Blend between colors based on time
+        float blend1 = sin(t) * 0.5 + 0.5;
+        float blend2 = sin(t * 0.7 + 1.5) * 0.5 + 0.5;
+
+        vec3 base = mix(mix(col1, col2, blend1), col3, blend2);
+
+        // Radial gradient: lighter in center where RI sits
+        float dist = length(vUv - vec2(0.5, 0.45));
+        float vignette = 1.0 - smoothstep(0.0, 0.7, dist);
+
+        // Subtle glow around center
+        vec3 glow = vec3(0.01, 0.04, 0.05) * vignette * 0.5;
+
+        gl_FragColor = vec4(base + glow, 1.0);
+      }
+    `,
+    uniforms: {
+      uTime: { value: 0 },
+    },
+  }), []);
+
+  useFrame((state) => {
+    if (matRef.current) {
+      matRef.current.uniforms.uTime.value = state.clock.elapsedTime;
     }
   });
 
   return (
-    <group ref={ref}>
-      {/* Top terrain surface */}
-      <mesh geometry={topGeo}>
-        <meshStandardMaterial
-          vertexColors
-          roughness={0.7}
-          metalness={0.05}
-        />
-      </mesh>
-
-      {/* Extruded side walls */}
-      {sideGeo.map((geo, i) => (
-        <mesh key={i} geometry={geo}>
-          <meshStandardMaterial
-            vertexColors
-            roughness={0.9}
-            metalness={0.0}
-          />
-        </mesh>
-      ))}
-
-      {/* Water plane (visible through bay and around islands) */}
-      <mesh geometry={waterGeo}>
-        <meshStandardMaterial
-          color="#0a2a3a"
-          roughness={0.2}
-          metalness={0.6}
-          transparent
-          opacity={0.85}
-        />
-      </mesh>
-
-      {/* Subtle edge glow ring at base */}
-      <mesh position={[0, -0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[70, 72, 64]} />
-        <meshBasicMaterial color="#22d3ee" transparent opacity={0.08} />
-      </mesh>
-    </group>
+    <mesh ref={meshRef} renderOrder={-1}>
+      <planeGeometry args={[2, 2]} />
+      <shaderMaterial
+        ref={matRef}
+        vertexShader={shader.vertexShader}
+        fragmentShader={shader.fragmentShader}
+        uniforms={shader.uniforms}
+        depthWrite={false}
+        depthTest={false}
+      />
+    </mesh>
   );
 }
 
@@ -271,35 +232,42 @@ export default function RhodeIslandTerrain() {
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000" }}>
       <Canvas
-        camera={{ position: [20, 120, 100], fov: 45, near: 0.1, far: 800 }}
+        camera={{
+          position: [0, 110, 55],
+          fov: 45,
+          near: 0.1,
+          far: 800,
+        }}
         gl={{ antialias: true }}
       >
-        <color attach="background" args={["#000000"]} />
+        {/* Animated breathing background */}
+        <AnimatedBackground />
 
         {/* Lighting */}
-        <ambientLight intensity={0.35} />
-        <directionalLight position={[50, 80, 30]} intensity={2.0} color="#fff5e6" />
-        <directionalLight position={[-30, 40, -20]} intensity={0.5} color="#22d3ee" />
-        {/* Underside rim light for floating effect */}
-        <pointLight position={[0, -5, 10]} intensity={0.5} color="#22d3ee" distance={120} />
-        <pointLight position={[-25, 20, 50]} intensity={0.25} color="#f59e0b" distance={100} />
+        <ambientLight intensity={0.4} />
+        <directionalLight position={[40, 80, 30]} intensity={1.8} color="#fff5e6" />
+        <directionalLight position={[-30, 50, -20]} intensity={0.4} color="#22d3ee" />
+        <pointLight position={[0, -5, 10]} intensity={0.3} color="#22d3ee" distance={100} />
 
+        {/* Map-style controls: look down, limited tilt, pan and zoom */}
         <OrbitControls
-          target={[-5, 2, 12]}
+          target={[-5, 0, 12]}
           enableDamping
-          dampingFactor={0.05}
-          minDistance={30}
-          maxDistance={250}
-          autoRotate
-          autoRotateSpeed={0.3}
-          maxPolarAngle={Math.PI / 2.1}
-          minPolarAngle={Math.PI / 8}
-          enablePan={false}
+          dampingFactor={0.08}
+          minDistance={40}
+          maxDistance={200}
+          // Lock to top-down-ish view (no flipping underneath)
+          maxPolarAngle={Math.PI / 3}    // max 60 degrees from top
+          minPolarAngle={Math.PI / 8}     // min ~22 degrees (never fully top-down)
+          enablePan={true}
+          panSpeed={0.5}
+          // NO auto-rotate — user controls the camera like a game
+          autoRotate={false}
+          enableRotate={true}
+          rotateSpeed={0.4}
         />
 
-        <TerrainSurface />
-
-        <fog attach="fog" args={["#000000", 180, 400]} />
+        <TerrainMesh />
       </Canvas>
     </div>
   );
