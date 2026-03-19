@@ -4,6 +4,9 @@ import { useMemo, useRef, useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import CityNodes from "./CityNodes";
+import NonprofitPins from "./NonprofitPins";
+import type { CityData, NonprofitData, ExplorationLevel } from "@/hooks/useExploration";
 
 // Geo conversion
 const CENTER_LNG = -71.4774;
@@ -228,12 +231,30 @@ function AnimatedBackground() {
   );
 }
 
-export default function RhodeIslandTerrain() {
+// ─── Props ──────────────────────────────────────────────────────
+
+interface RhodeIslandTerrainProps {
+  cities?: CityData[];
+  nonprofits?: NonprofitData[];
+  explorationLevel?: ExplorationLevel;
+  activeCause?: string;
+  onCityClick?: (city: string, county: string) => void;
+  onNonprofitClick?: (slug: string) => void;
+}
+
+export default function RhodeIslandTerrain({
+  cities = [],
+  nonprofits = [],
+  explorationLevel = "overview",
+  activeCause = "",
+  onCityClick,
+  onNonprofitClick,
+}: RhodeIslandTerrainProps) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000" }}>
       <Canvas
         camera={{
-          position: [0, 110, 55],
+          position: [0, 130, 65],
           fov: 45,
           near: 0.1,
           far: 800,
@@ -256,18 +277,36 @@ export default function RhodeIslandTerrain() {
           dampingFactor={0.08}
           minDistance={40}
           maxDistance={200}
-          // Lock to top-down-ish view (no flipping underneath)
-          maxPolarAngle={Math.PI / 3}    // max 60 degrees from top
-          minPolarAngle={Math.PI / 8}     // min ~22 degrees (never fully top-down)
+          maxPolarAngle={Math.PI / 3}
+          minPolarAngle={Math.PI / 8}
           enablePan={true}
           panSpeed={0.5}
-          // NO auto-rotate — user controls the camera like a game
           autoRotate={false}
           enableRotate={true}
           rotateSpeed={0.4}
         />
 
         <TerrainMesh />
+
+        {/* County nodes at overview, city dots after county selected */}
+        {(explorationLevel === "overview" || explorationLevel === "city") && cities.length > 0 && onCityClick && (
+          <CityNodes
+            cities={cities}
+            onCityClick={onCityClick}
+            mode={explorationLevel === "overview" ? "counties" : "cities"}
+          />
+        )}
+
+        {/* Nonprofit pins: visible at cause or nonprofit level */}
+        {(explorationLevel === "cause" || explorationLevel === "nonprofit") &&
+          nonprofits.length > 0 &&
+          onNonprofitClick && (
+            <NonprofitPins
+              nonprofits={nonprofits}
+              cause={activeCause}
+              onNonprofitClick={onNonprofitClick}
+            />
+          )}
       </Canvas>
     </div>
   );
