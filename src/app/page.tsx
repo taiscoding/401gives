@@ -85,6 +85,77 @@ export default function Home() {
         onNonprofitClick={selectNonprofit}
       />
 
+      {/* Welcome overlay: tells you what this is and what to do */}
+      {state.level === "overview" && (
+        <div
+          className="fixed inset-0 z-20 pointer-events-none flex flex-col items-center"
+          style={{ paddingTop: "8vh" }}
+        >
+          {/* Title */}
+          <h1
+            style={{
+              fontFamily: '"Sohne", sans-serif',
+              fontWeight: 800,
+              fontSize: "clamp(28px, 4vw, 48px)",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              color: "#ffffff",
+              margin: 0,
+              textAlign: "center",
+            }}
+          >
+            401.GIVES
+          </h1>
+
+          {/* Tagline */}
+          <p
+            style={{
+              fontFamily: '"Sohne Mono", monospace',
+              fontSize: "clamp(10px, 1.2vw, 14px)",
+              textTransform: "uppercase",
+              letterSpacing: "0.2em",
+              color: "rgba(34, 211, 238, 0.8)",
+              margin: "8px 0 0",
+              textAlign: "center",
+            }}
+          >
+            EXPLORE RHODE ISLAND'S 631 NONPROFITS
+          </p>
+
+          {/* Instruction */}
+          <p
+            style={{
+              fontFamily: '"Sohne Mono", monospace',
+              fontSize: "clamp(9px, 1vw, 11px)",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              color: "rgba(255, 255, 255, 0.35)",
+              margin: "12px 0 0",
+              textAlign: "center",
+            }}
+          >
+            CLICK A COUNTY TO BEGIN
+          </p>
+
+          {/* March 31 badge */}
+          <div
+            style={{
+              marginTop: "16px",
+              padding: "6px 16px",
+              borderRadius: 20,
+              border: "1px solid rgba(245, 158, 11, 0.3)",
+              fontFamily: '"Sohne Mono", monospace',
+              fontSize: "9px",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              color: "#f59e0b",
+            }}
+          >
+            401GIVES DAY: MARCH 31
+          </div>
+        </div>
+      )}
+
       {/* Multi-level side panel (left) */}
       {state.level !== "overview" && (
         <SidePanel
