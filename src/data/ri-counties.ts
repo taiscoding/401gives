@@ -46,6 +46,27 @@ export const CITY_TO_COUNTY: Record<string, string> = {
   "Bristol": "Bristol",
   "Warren": "Bristol",
   "Barrington": "Bristol",
+  // Villages/neighborhoods mapped to parent municipality
+  "Riverside": "Providence",       // part of East Providence
+  "Rumford": "Providence",         // part of East Providence
+  "Wakefield": "Washington",       // part of South Kingstown
+  "Peace Dale": "Washington",      // part of South Kingstown
+  "Kingston": "Washington",        // part of South Kingstown
+  "West Kingston": "Washington",   // part of South Kingstown
+  "Saunderstown": "Washington",    // part of North Kingstown
+  "Hope Valley": "Washington",     // part of Hopkinton
+  "Wyoming": "Washington",         // part of Richmond
+  "Bradford": "Washington",        // part of Westerly
+  "Chepachet": "Providence",       // part of Glocester
+  "Slatersville": "Providence",    // part of North Smithfield
+  "Pascoag": "Providence",         // part of Burrillville
+  "Greenville": "Providence",      // part of Smithfield
+  "Hope": "Providence",            // part of Scituate
+  "North Scituate": "Providence",  // part of Scituate
+  "North Kingston": "Washington",  // alternate spelling
+  "N Kingstown": "Washington",     // abbreviated
+  "Smithifeld": "Providence",      // typo on 401gives
+  "Prudence Island": "Newport",    // in Narragansett Bay
 };
 
 // Lat/lng for each city center
@@ -94,6 +115,27 @@ export const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   "Bristol": { lat: 41.6771, lng: -71.2662 },
   "Warren": { lat: 41.7301, lng: -71.2823 },
   "Barrington": { lat: 41.7409, lng: -71.3184 },
+  // Villages/neighborhoods
+  "Riverside": { lat: 41.7780, lng: -71.3530 },
+  "Rumford": { lat: 41.8430, lng: -71.3550 },
+  "Wakefield": { lat: 41.4430, lng: -71.4970 },
+  "Peace Dale": { lat: 41.4480, lng: -71.5090 },
+  "Kingston": { lat: 41.4810, lng: -71.5230 },
+  "West Kingston": { lat: 41.5020, lng: -71.5650 },
+  "Saunderstown": { lat: 41.5190, lng: -71.4380 },
+  "Hope Valley": { lat: 41.5070, lng: -71.7210 },
+  "Wyoming": { lat: 41.5220, lng: -71.6730 },
+  "Bradford": { lat: 41.3940, lng: -71.7540 },
+  "Chepachet": { lat: 41.9150, lng: -71.6710 },
+  "Slatersville": { lat: 41.9970, lng: -71.5750 },
+  "Pascoag": { lat: 41.9560, lng: -71.7030 },
+  "Greenville": { lat: 41.8780, lng: -71.5560 },
+  "Hope": { lat: 41.7440, lng: -71.5550 },
+  "North Scituate": { lat: 41.8310, lng: -71.5890 },
+  "North Kingston": { lat: 41.5501, lng: -71.4534 },
+  "N Kingstown": { lat: 41.5501, lng: -71.4534 },
+  "Smithifeld": { lat: 41.9223, lng: -71.5490 },
+  "Prudence Island": { lat: 41.6050, lng: -71.3240 },
 };
 
 // County centers (approximate geometric center)
