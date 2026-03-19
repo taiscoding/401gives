@@ -3,10 +3,47 @@ import { db } from "@/lib/db";
 import { nonprofits, causes, nonprofitCauses } from "@/lib/schema";
 import { eq, sql, and, ne } from "drizzle-orm";
 
+// Normalize city name variants to canonical form
+const CITY_ALIASES: Record<string, string> = {
+  "North Kingston": "North Kingstown",
+  "N Kingstown": "North Kingstown",
+  "N. Kingstown": "North Kingstown",
+  "Smithifeld": "Smithfield",
+  "E Providence": "East Providence",
+  "E. Providence": "East Providence",
+  "N Providence": "North Providence",
+  "N. Providence": "North Providence",
+  "W Warwick": "West Warwick",
+  "W. Warwick": "West Warwick",
+  "E Greenwich": "East Greenwich",
+  "E. Greenwich": "East Greenwich",
+  "W Greenwich": "West Greenwich",
+  "W. Greenwich": "West Greenwich",
+  "N Smithfield": "North Smithfield",
+  "N. Smithfield": "North Smithfield",
+};
+
+function normalizeCity(city: string): string {
+  const trimmed = city.trim();
+  return CITY_ALIASES[trimmed] || trimmed;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const city = searchParams.get("city");
+  const rawCity = searchParams.get("city");
   const cause = searchParams.get("cause");
+
+  // Find all DB variants that map to this canonical city name
+  function getCityVariants(canonical: string): string[] {
+    const variants = [canonical];
+    for (const [alias, target] of Object.entries(CITY_ALIASES)) {
+      if (target === canonical) variants.push(alias);
+    }
+    return variants;
+  }
+
+  const city = rawCity ? normalizeCity(rawCity) : null;
+  const cityVariants = city ? getCityVariants(city) : [];
 
   try {
     // Level 3: city + cause specified, return individual nonprofits
@@ -27,7 +64,10 @@ export async function GET(request: NextRequest) {
         .from(nonprofits)
         .innerJoin(nonprofitCauses, eq(nonprofitCauses.nonprofitId, nonprofits.id))
         .innerJoin(causes, eq(causes.id, nonprofitCauses.causeId))
-        .where(and(eq(nonprofits.city, city), eq(causes.name, cause)));
+        .where(and(
+          sql`${nonprofits.city} IN (${sql.join(cityVariants.map(v => sql`${v}`), sql`, `)})`,
+          eq(causes.name, cause)
+        ));
 
       // Also fetch all causes for each nonprofit for the chips
       const nonprofitIds = rows.map((r) => r.id);
@@ -124,7 +164,7 @@ export async function GET(request: NextRequest) {
         .from(nonprofitCauses)
         .innerJoin(causes, eq(causes.id, nonprofitCauses.causeId))
         .innerJoin(nonprofits, eq(nonprofits.id, nonprofitCauses.nonprofitId))
-        .where(eq(nonprofits.city, city))
+        .where(sql`${nonprofits.city} IN (${sql.join(cityVariants.map(v => sql`${v}`), sql`, `)})`)
         .groupBy(causes.name, causes.color)
         .orderBy(sql`count(*) desc`);
 
@@ -132,7 +172,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Level 1: no params, return city summaries
-    const cities = await db
+    const rawCities = await db
       .select({
         name: nonprofits.city,
         county: nonprofits.county,
@@ -143,6 +183,23 @@ export async function GET(request: NextRequest) {
       .from(nonprofits)
       .groupBy(nonprofits.city, nonprofits.county)
       .orderBy(sql`count(*) desc`);
+
+    // Merge duplicate city names (e.g. "North Kingston" + "N Kingstown" → "North Kingstown")
+    const cityMap = new Map<string, typeof rawCities[0]>();
+    for (const c of rawCities) {
+      const canonical = normalizeCity(c.name);
+      const existing = cityMap.get(canonical);
+      if (existing) {
+        existing.count += c.count;
+        // Weighted average of coords
+        const totalCount = existing.count;
+        existing.lat = (existing.lat * (totalCount - c.count) + c.lat * c.count) / totalCount;
+        existing.lng = (existing.lng * (totalCount - c.count) + c.lng * c.count) / totalCount;
+      } else {
+        cityMap.set(canonical, { ...c, name: canonical });
+      }
+    }
+    const cities = Array.from(cityMap.values()).sort((a, b) => b.count - a.count);
 
     // Also return all cause names for reference
     const allCauses = await db
