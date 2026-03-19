@@ -284,6 +284,11 @@ body {
   animation: fade-in 1.5s ease forwards;
 }
 
+@keyframes pulse-text {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
 /* Scanline overlay */
 .scanlines::after {
   content: "";
