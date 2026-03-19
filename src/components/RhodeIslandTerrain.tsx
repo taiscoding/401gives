@@ -119,7 +119,7 @@ function color(h: number): [number, number, number] {
 }
 
 // Terrain chip: top surface with elevation + thin side walls + flat bottom
-const CHIP_THICKNESS = 1.5; // how thick the chip is
+const CHIP_THICKNESS = 0.8; // thin chip, like a coin
 
 function TerrainMesh() {
   const ref = useRef<THREE.Group>(null!);
@@ -139,7 +139,7 @@ function TerrainMesh() {
 
       if (isInsideRI(x, z)) {
         const h = elevation(x, z);
-        pos.setY(i, h * 2.5 + CHIP_THICKNESS);
+        pos.setY(i, h * 1.2 + CHIP_THICKNESS);
         const [r, g, b] = color(h);
         cols[i * 3] = r;
         cols[i * 3 + 1] = g;
@@ -164,8 +164,8 @@ function TerrainMesh() {
       for (let i = 0; i < polygon.length; i++) {
         const [x1, z1] = polygon[i];
         const [x2, z2] = polygon[(i + 1) % polygon.length];
-        const h1 = elevation(x1, z1) * 2.5 + CHIP_THICKNESS;
-        const h2 = elevation(x2, z2) * 2.5 + CHIP_THICKNESS;
+        const h1 = elevation(x1, z1) * 1.2 + CHIP_THICKNESS;
+        const h2 = elevation(x2, z2) * 1.2 + CHIP_THICKNESS;
         // Two triangles: top-edge to bottom (y=0)
         verts.push(x1, h1, z1, x2, h2, z2, x1, 0, z1);
         verts.push(x2, h2, z2, x2, 0, z2, x1, 0, z1);
@@ -279,7 +279,7 @@ export default function RhodeIslandTerrain({
     <div style={{ position: "fixed", inset: 0 }}>
       <Canvas
         camera={{
-          position: [0, 150, 45],
+          position: [30, 100, 80],
           fov: 45,
           near: 0.1,
           far: 800,
@@ -301,11 +301,12 @@ export default function RhodeIslandTerrain({
           dampingFactor={0.08}
           minDistance={40}
           maxDistance={200}
-          maxPolarAngle={Math.PI / 5}
-          minPolarAngle={Math.PI / 5.5}
+          maxPolarAngle={Math.PI / 2.2}
+          minPolarAngle={Math.PI / 8}
           enablePan={true}
           panSpeed={0.5}
-          autoRotate={false}
+          autoRotate
+          autoRotateSpeed={0.3}
           enableRotate={true}
           rotateSpeed={0.4}
         />

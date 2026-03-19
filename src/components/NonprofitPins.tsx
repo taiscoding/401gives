@@ -136,7 +136,7 @@ export default function NonprofitPins({
   const pins = useMemo(() => {
     return nonprofits.map((np) => {
       const [x, z] = geo(np.lng, np.lat);
-      const y = elevation(x, z) * 2.5 + 1.5 + 0.6; // terrain height + small float
+      const y = elevation(x, z) * 1.2 + 0.8 + 0.6; // terrain height + small float
       return {
         nonprofit: np,
         position: [x, y, z] as [number, number, number],
