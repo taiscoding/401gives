@@ -41,8 +41,8 @@ export default function SidePanel({
 }: SidePanelProps) {
   return (
     <div
-      className="fixed left-0 top-0 bottom-0 z-50 flex flex-col slide-in-left"
-      style={{ width: 320 }}
+      className="fixed left-0 bottom-0 z-50 flex flex-col slide-in-left"
+      style={{ top: 36, width: 320 }}
     >
       <div
         className="h-full overflow-y-auto"

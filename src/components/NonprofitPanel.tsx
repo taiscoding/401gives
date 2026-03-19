@@ -123,8 +123,8 @@ export default function NonprofitPanel({
 
   return (
     <div
-      className="fixed right-0 top-0 bottom-0 z-50 slide-in-right"
-      style={{ width: 420 }}
+      className="fixed right-0 bottom-0 z-50 slide-in-right"
+      style={{ top: 36, width: 420 }}
     >
       <div
         className="h-full overflow-y-auto"
