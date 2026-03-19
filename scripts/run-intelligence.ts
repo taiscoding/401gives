@@ -14,7 +14,7 @@ import { runNeuroplasticity } from "../src/lib/neuroplasticity";
 import { getMetaLearningSummary } from "../src/lib/meta-learning";
 
 async function main() {
-  const sql = neon(process.env.DATABASE_URL!);
+  const sql = neon(process.env.DATABASE_URL!) as any;
 
   console.log("=== 401.gives Intelligence Run ===\n");
   console.log(`Timestamp: ${new Date().toISOString()}\n`);
