@@ -108,6 +108,15 @@ export default function Home() {
         <NonprofitPanel nonprofit={selectedNonprofit} onBack={goBack} />
       )}
 
+      {/* Bottom fade: terrain gracefully dissolves into sky */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-30 pointer-events-none"
+        style={{
+          height: "30vh",
+          background: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)",
+        }}
+      />
+
       {/* Bottom HUD */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 hud-panel px-6 py-3">
         <div className="flex items-center gap-4 font-sohne-mono text-[10px] uppercase tracking-wider">

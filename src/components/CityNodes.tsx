@@ -209,7 +209,7 @@ export default function CityNodes({ cities, onCityClick, onCountyClick, mode = "
       const center = COUNTY_CENTERS[county];
       if (!center) return null;
       const [x, z] = geo(center.lng, center.lat);
-      const y = elevation(x, z) * 6 + 1.5 + 2;
+      const y = elevation(x, z) * 2.5 + 1.5 + 2;
       return { name: county, count: data.count, position: [x, y, z] as [number, number, number], cities: data.cities };
     }).filter(Boolean) as { name: string; count: number; position: [number, number, number]; cities: CityData[] }[];
   }, [cities]);
@@ -218,7 +218,7 @@ export default function CityNodes({ cities, onCityClick, onCountyClick, mode = "
   const cityPositions = useMemo(() => {
     return cities.map((city) => {
       const [x, z] = geo(city.lng, city.lat);
-      const y = elevation(x, z) * 6 + 1.5 + 0.8;
+      const y = elevation(x, z) * 2.5 + 1.5 + 0.8;
       return { ...city, position: [x, y, z] as [number, number, number] };
     });
   }, [cities]);

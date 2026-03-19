@@ -98,36 +98,28 @@ export function getSkyPhase(solar: SolarData, nowMinutes: number): SkyPhase {
  * like looking up from wherever you are.
  */
 export function phaseToGradient(phase: SkyPhase): string {
+  // Linear gradients: lighter sky at top, darker ground/horizon at bottom
+  // Like looking at the sky from Rhode Island
   switch (phase) {
     case "night":
-      // Deep space. Stars would be here.
-      return "radial-gradient(ellipse at 50% 50%, #0a0e1a 0%, #050810 60%, #010204 100%)";
+      return "linear-gradient(to bottom, #0a0e1a 0%, #060a14 40%, #020408 100%)";
     case "first_light":
-      // Navy with a hint of indigo on the horizon
-      return "radial-gradient(ellipse at 50% 90%, #1a1535 0%, #0c0a20 50%, #050810 100%)";
+      return "linear-gradient(to bottom, #0c0a20 0%, #0a0818 50%, #1a1535 100%)";
     case "dawn":
-      // Deep blue-purple, warm glow at bottom
-      return "radial-gradient(ellipse at 50% 95%, #3a1a30 0%, #1a1040 40%, #0a0c20 100%)";
+      return "linear-gradient(to bottom, #0a0c20 0%, #1a1040 50%, #3a1a30 100%)";
     case "sunrise":
-      // Orange-pink horizon bleeding into blue
-      return "radial-gradient(ellipse at 50% 95%, #4a2028 0%, #2a1838 30%, #121830 70%, #0c1020 100%)";
+      return "linear-gradient(to bottom, #121830 0%, #2a1838 40%, #4a2028 100%)";
     case "morning":
-      // Clear blue sky, lighter than you think
-      return "radial-gradient(ellipse at 50% 30%, #1e3a5c 0%, #152c4a 40%, #0e1e38 100%)";
+      return "linear-gradient(to bottom, #1e3a5c 0%, #152c4a 50%, #0e1e38 100%)";
     case "midday":
-      // Brightest blue. Real sky.
-      return "radial-gradient(ellipse at 50% 25%, #1e4070 0%, #183460 40%, #102848 100%)";
+      return "linear-gradient(to bottom, #1e4070 0%, #183460 50%, #0e1e38 100%)";
     case "golden_hour":
-      // Warm amber creeping in, sky still blue above
-      return "radial-gradient(ellipse at 50% 70%, #3a2030 0%, #2a1838 30%, #142040 70%, #0e1830 100%)";
+      return "linear-gradient(to bottom, #142040 0%, #2a1838 40%, #3a2030 100%)";
     case "sunset":
-      // Fire at the horizon, deep purple above
-      return "radial-gradient(ellipse at 50% 85%, #4a1820 0%, #351530 30%, #1a1035 70%, #0c0a1a 100%)";
+      return "linear-gradient(to bottom, #1a1035 0%, #351530 40%, #4a1820 100%)";
     case "dusk":
-      // Purple-blue fading, last warmth gone
-      return "radial-gradient(ellipse at 50% 70%, #201530 0%, #141028 50%, #080814 100%)";
+      return "linear-gradient(to bottom, #080814 0%, #141028 50%, #201530 100%)";
     case "last_light":
-      // Almost night, deep indigo
-      return "radial-gradient(ellipse at 50% 60%, #141025 0%, #0a0818 50%, #040608 100%)";
+      return "linear-gradient(to bottom, #040608 0%, #0a0818 50%, #141025 100%)";
   }
 }

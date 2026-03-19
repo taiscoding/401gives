@@ -118,16 +118,19 @@ function color(h: number): [number, number, number] {
   return [0.55, 0.58, 0.30];
 }
 
-// Terrain mesh (just the top surface, no side walls or water plane box)
+// Terrain chip: top surface with elevation + thin side walls + flat bottom
+const CHIP_THICKNESS = 1.5; // how thick the chip is
+
 function TerrainMesh() {
-  const ref = useRef<THREE.Mesh>(null!);
+  const ref = useRef<THREE.Group>(null!);
 
-  const geometry = useMemo(() => {
+  const { topGeo, sideGeo, bottomGeo } = useMemo(() => {
+    // --- TOP SURFACE ---
     const seg = 300;
-    const geo = new THREE.PlaneGeometry(100, 140, seg, seg);
-    geo.rotateX(-Math.PI / 2);
+    const top = new THREE.PlaneGeometry(100, 140, seg, seg);
+    top.rotateX(-Math.PI / 2);
 
-    const pos = geo.attributes.position;
+    const pos = top.attributes.position;
     const cols = new Float32Array(pos.count * 3);
 
     for (let i = 0; i < pos.count; i++) {
@@ -136,36 +139,12 @@ function TerrainMesh() {
 
       if (isInsideRI(x, z)) {
         const h = elevation(x, z);
-        pos.setY(i, h * 6 + 1.5);
+        pos.setY(i, h * 2.5 + CHIP_THICKNESS);
         const [r, g, b] = color(h);
-
-        // Edge fade: darken vertices near the boundary
-        let minDist = Infinity;
-        for (const poly of [MAINLAND, AQUIDNECK, CONANICUT]) {
-          for (let j = 0; j < poly.length; j++) {
-            const [ax, az] = poly[j];
-            const [bx, bz] = poly[(j + 1) % poly.length];
-            // Point-to-segment distance
-            const dx = bx - ax, dz = bz - az;
-            const len2 = dx * dx + dz * dz;
-            let t = len2 > 0 ? ((x - ax) * dx + (z - az) * dz) / len2 : 0;
-            t = Math.max(0, Math.min(1, t));
-            const px = ax + t * dx, pz = az + t * dz;
-            const dist = Math.sqrt((x - px) ** 2 + (z - pz) ** 2);
-            if (dist < minDist) minDist = dist;
-          }
-        }
-        // Fade factor: 1.0 at center, 0.0 at boundary
-        const fadeRadius = 4; // units from edge to start fading
-        const fade = Math.min(1, minDist / fadeRadius);
-        const fadePow = fade * fade; // quadratic for smoother falloff
-
-        cols[i * 3] = r * fadePow;
-        cols[i * 3 + 1] = g * fadePow;
-        cols[i * 3 + 2] = b * fadePow;
+        cols[i * 3] = r;
+        cols[i * 3 + 1] = g;
+        cols[i * 3 + 2] = b;
       } else {
-        // Collapse outside vertices to a single point far below view
-        // This makes outside triangles degenerate (zero area) so they're invisible
         pos.setX(i, 0);
         pos.setY(i, -100);
         pos.setZ(i, 0);
@@ -175,15 +154,95 @@ function TerrainMesh() {
       }
     }
 
-    geo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
-    geo.computeVertexNormals();
-    return geo;
+    top.setAttribute("color", new THREE.BufferAttribute(cols, 3));
+    top.computeVertexNormals();
+
+    // --- SIDE WALLS ---
+    const createWalls = (polygon: [number, number][]): THREE.BufferGeometry => {
+      const verts: number[] = [];
+      const wallCols: number[] = [];
+      for (let i = 0; i < polygon.length; i++) {
+        const [x1, z1] = polygon[i];
+        const [x2, z2] = polygon[(i + 1) % polygon.length];
+        const h1 = elevation(x1, z1) * 2.5 + CHIP_THICKNESS;
+        const h2 = elevation(x2, z2) * 2.5 + CHIP_THICKNESS;
+        // Two triangles: top-edge to bottom (y=0)
+        verts.push(x1, h1, z1, x2, h2, z2, x1, 0, z1);
+        verts.push(x2, h2, z2, x2, 0, z2, x1, 0, z1);
+        // Dark side color
+        const sc = [0.04, 0.06, 0.08];
+        const bc = [0.02, 0.03, 0.04];
+        wallCols.push(...sc, ...sc, ...bc, ...sc, ...bc, ...bc);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+      g.setAttribute("color", new THREE.Float32BufferAttribute(wallCols, 3));
+      g.computeVertexNormals();
+      return g;
+    };
+
+    const sides = [
+      createWalls(MAINLAND),
+      createWalls(AQUIDNECK),
+      createWalls(CONANICUT),
+    ];
+
+    // Merge side geometries
+    const merged = new THREE.BufferGeometry();
+    const allVerts: number[] = [];
+    const allCols: number[] = [];
+    for (const s of sides) {
+      const p = s.attributes.position;
+      const c = s.attributes.color;
+      for (let i = 0; i < p.count; i++) {
+        allVerts.push(p.getX(i), p.getY(i), p.getZ(i));
+        allCols.push(c.getX(i), c.getY(i), c.getZ(i));
+      }
+    }
+    merged.setAttribute("position", new THREE.Float32BufferAttribute(allVerts, 3));
+    merged.setAttribute("color", new THREE.Float32BufferAttribute(allCols, 3));
+    merged.computeVertexNormals();
+
+    // --- BOTTOM FACE (flat, dark) ---
+    const bottom = new THREE.PlaneGeometry(100, 140, seg, seg);
+    bottom.rotateX(Math.PI / 2); // face down
+    const bPos = bottom.attributes.position;
+    const bCols = new Float32Array(bPos.count * 3);
+    for (let i = 0; i < bPos.count; i++) {
+      const x = bPos.getX(i);
+      const z = bPos.getZ(i);
+      if (isInsideRI(x, z)) {
+        bPos.setY(i, 0);
+        bCols[i * 3] = 0.02;
+        bCols[i * 3 + 1] = 0.03;
+        bCols[i * 3 + 2] = 0.04;
+      } else {
+        bPos.setX(i, 0);
+        bPos.setY(i, -100);
+        bPos.setZ(i, 0);
+        bCols[i * 3] = 0;
+        bCols[i * 3 + 1] = 0;
+        bCols[i * 3 + 2] = 0;
+      }
+    }
+    bottom.setAttribute("color", new THREE.BufferAttribute(bCols, 3));
+    bottom.computeVertexNormals();
+
+    return { topGeo: top, sideGeo: merged, bottomGeo: bottom };
   }, []);
 
   return (
-    <mesh ref={ref} geometry={geometry}>
-      <meshStandardMaterial vertexColors roughness={0.7} metalness={0.05} />
-    </mesh>
+    <group ref={ref}>
+      <mesh geometry={topGeo}>
+        <meshStandardMaterial vertexColors roughness={0.7} metalness={0.05} />
+      </mesh>
+      <mesh geometry={sideGeo}>
+        <meshStandardMaterial vertexColors roughness={0.9} metalness={0} />
+      </mesh>
+      <mesh geometry={bottomGeo}>
+        <meshStandardMaterial vertexColors roughness={0.95} metalness={0} />
+      </mesh>
+    </group>
   );
 }
 
@@ -220,7 +279,7 @@ export default function RhodeIslandTerrain({
     <div style={{ position: "fixed", inset: 0 }}>
       <Canvas
         camera={{
-          position: [0, 130, 65],
+          position: [0, 150, 45],
           fov: 45,
           near: 0.1,
           far: 800,
@@ -242,8 +301,8 @@ export default function RhodeIslandTerrain({
           dampingFactor={0.08}
           minDistance={40}
           maxDistance={200}
-          maxPolarAngle={Math.PI / 3}
-          minPolarAngle={Math.PI / 8}
+          maxPolarAngle={Math.PI / 5}
+          minPolarAngle={Math.PI / 5.5}
           enablePan={true}
           panSpeed={0.5}
           autoRotate={false}
